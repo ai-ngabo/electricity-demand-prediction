@@ -47,3 +47,8 @@ def require(value, name):
             f"and fill in your credentials."
         )
     return value
+
+
+# Enforce required credentials
+POSTGRES_URL = require(POSTGRES_URL, "POSTGRES_URL")
+MONGODB_URI = require(MONGODB_URI, "MONGODB_URI")
