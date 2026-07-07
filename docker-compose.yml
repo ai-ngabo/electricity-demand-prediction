@@ -1,0 +1,12 @@
+services:
+  task2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: task2-databases
+    env_file:
+      - .env
+    volumes:
+      - ./energy_dataset.csv:/app/energy_dataset.csv:ro
+      - ./weather_features.csv:/app/weather_features.csv:ro
+    command: python database/run_all.py
