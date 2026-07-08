@@ -46,6 +46,7 @@ def create_record(record: MongoRecordCreate, collection = Depends(get_mongo_coll
     return create_mongo_record(collection, record.model_dump())
 
 @router.put("/records/{record_id}", response_model=MongoRecordResponse)
+@router.patch("/records/{record_id}", response_model=MongoRecordResponse)
 def update_record(record_id: str, record: MongoRecordUpdate, collection = Depends(get_mongo_collection)):
     updated = update_mongo_record(collection, record_id, record.model_dump(exclude_unset=True))
     if not updated:

@@ -98,6 +98,7 @@ def create_record(record: PostgresRecordCreate, db: Session = Depends(get_pg_db)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/records/{ts}", response_model=PostgresRecordResponse, response_model_by_alias=False)
+@router.patch("/records/{ts}", response_model=PostgresRecordResponse, response_model_by_alias=False)
 def update_record(ts: datetime, record: PostgresRecordUpdate, db: Session = Depends(get_pg_db)):
     try:
         updated = update_postgres_record(db, ts, record.model_dump(exclude_unset=True))
