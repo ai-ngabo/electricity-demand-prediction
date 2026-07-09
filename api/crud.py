@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from bson import ObjectId
 from fastapi import HTTPException
+from pymongo.errors import DuplicateKeyError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -104,21 +106,34 @@ def mongo_document_to_dict(document: dict[str, Any] | None) -> dict[str, Any] | 
 	return document
 
 
-def parse_object_id(record_id: str) -> ObjectId:
-	try:
+def resolve_mongo_id(record_id: str):
+	"""Task 2 documents use a datetime _id (one doc per hour); records created
+	through the API without a timestamp fall back to an ObjectId. Support both."""
+	if ObjectId.is_valid(record_id):
 		return ObjectId(record_id)
-	except Exception as exc:
+	try:
+		return datetime.fromisoformat(record_id)
+	except ValueError as exc:
 		raise HTTPException(status_code=400, detail="Invalid record id") from exc
 
 
 def create_mongo_record(collection, payload: dict[str, Any]) -> dict[str, Any]:
-	result = collection.insert_one(payload)
-	document = collection.find_one({"_id": result.inserted_id})
-	return mongo_document_to_dict(document)
+	document = dict(payload)
+	if document.get("timestamp") is not None:
+		document["_id"] = document["timestamp"]
+	try:
+		result = collection.insert_one(document)
+	except DuplicateKeyError as exc:
+		raise HTTPException(
+			status_code=409,
+			detail="A record with this timestamp already exists",
+		) from exc
+	created = collection.find_one({"_id": result.inserted_id})
+	return mongo_document_to_dict(created)
 
 
 def fetch_mongo_record(collection, record_id: str) -> dict[str, Any] | None:
-	document = collection.find_one({"_id": parse_object_id(record_id)})
+	document = collection.find_one({"_id": resolve_mongo_id(record_id)})
 	return mongo_document_to_dict(document)
 
 
@@ -139,12 +154,12 @@ def update_mongo_record(collection, record_id: str, payload: dict[str, Any]) -> 
 		return fetch_mongo_record(collection, record_id)
 
 	collection.update_one(
-		{"_id": parse_object_id(record_id)},
+		{"_id": resolve_mongo_id(record_id)},
 		{"$set": payload},
 	)
 	return fetch_mongo_record(collection, record_id)
 
 
 def delete_mongo_record(collection, record_id: str) -> bool:
-	result = collection.delete_one({"_id": parse_object_id(record_id)})
+	result = collection.delete_one({"_id": resolve_mongo_id(record_id)})
 	return result.deleted_count > 0

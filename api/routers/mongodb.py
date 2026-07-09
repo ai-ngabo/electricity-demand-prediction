@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException
 from api.deps import get_mongo_collection
 from api.crud import (
@@ -15,8 +17,12 @@ from fastapi import Query, status
 router = APIRouter(prefix="/mongodb", tags=["MongoDB"])
 
 @router.get("/records", response_model=list[MongoRecordResponse])
-def list_records(collection = Depends(get_mongo_collection)):
-    records = list(collection.find().sort("timestamp", 1))
+def list_records(
+    limit: int = Query(default=100, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    collection = Depends(get_mongo_collection),
+):
+    records = list(collection.find().sort("timestamp", 1).skip(skip).limit(limit))
     return [{**record, "id": str(record.pop("_id"))} for record in records]
 
 @router.get("/latest")

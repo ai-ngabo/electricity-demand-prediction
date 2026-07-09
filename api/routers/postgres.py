@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -19,8 +22,10 @@ router = APIRouter(prefix="/postgres", tags=["PostgreSQL"])
 
 @router.get("/records", response_model=list[PostgresRecordResponse], response_model_by_alias=False)
 def list_records(
-    start_date: datetime | None = Query(default=None),
-    end_date: datetime | None = Query(default=None),
+    start_date: Optional[datetime] = Query(default=None),
+    end_date: Optional[datetime] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
     db: Session = Depends(get_pg_db),
 ):
     try:
@@ -33,8 +38,10 @@ def list_records(
                 SELECT ts, total_load_actual, price_actual, price_day_ahead
                 FROM energy_demand
                 ORDER BY ts
+                LIMIT :limit OFFSET :skip
                 """
-            )
+            ),
+            {"limit": limit, "skip": skip},
         )
         return [dict(row._mapping) for row in result.fetchall()]
     except Exception as e:
