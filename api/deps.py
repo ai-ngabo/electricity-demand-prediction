@@ -14,7 +14,8 @@ from pymongo import MongoClient
 from database.common.config import POSTGRES_URL, MONGODB_URI, MONGODB_DB
 
 # PostgreSQL
-engine = create_engine(POSTGRES_URL)
+
+engine = create_engine(POSTGRES_URL, pool_pre_ping=True, pool_recycle=300)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_pg_db():
