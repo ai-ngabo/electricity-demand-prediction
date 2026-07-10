@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -32,16 +33,36 @@ MODEL_PATH = REPO_ROOT / "models" / "demand_model.joblib"
 
 DEFAULT_API_URL = "http://localhost:8000"
 HISTORY_HOURS = MIN_HISTORY_HOURS + 48
-REQUEST_TIMEOUT_SECONDS = 30
+REQUEST_TIMEOUT_SECONDS = 60
+RETRY_ATTEMPTS = 3
+RETRY_WAIT_SECONDS = 10
 
 
 def get_json(url: str, params: dict[str, str] | None = None) -> Any:
-    """GET a JSON payload, failing loudly on HTTP or connection errors."""
-    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+    """GET a JSON payload, retrying while the free-tier host wakes up.
 
-    response.raise_for_status()
+    The deployed API and its database both sleep between requests, so
+    the first call after a quiet period can time out or return a 5xx.
+    Those transient failures are retried; client errors are not.
+    """
+    for attempt in range(1, RETRY_ATTEMPTS + 1):
+        try:
+            response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
 
-    return response.json()
+            response.raise_for_status()
+
+            return response.json()
+        except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as error:
+            response = getattr(error, "response", None)
+
+            is_client_error = response is not None and response.status_code < 500
+
+            if is_client_error or attempt == RETRY_ATTEMPTS:
+                raise
+
+            print(f"Request failed ({error}), retrying in {RETRY_WAIT_SECONDS}s...")
+
+            time.sleep(RETRY_WAIT_SECONDS)
 
 
 def fetch_history(api_url: str) -> pd.Series:
