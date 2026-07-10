@@ -115,7 +115,7 @@ Forecast next hour :  23,305.10 MW for 2018-12-31 23:00 UTC
 
 | Member | Major components |
 |---|---|
-| Alain Ngbao | Task 1: notebook, EDA, and model experiments |
-| James Mukunzi | Task 3: API CRUD endpoints |
-| Silver JR Nshuti | Task 2: databases, deployment |
+| Alain Ngabo | Task 1: notebook, EDA, and model experiments |
+| Silver JR Nshuti | Task 3: API CRUD endpoints |
+| James Mukunzi | Task 2: databases, deployment |
 | Michael Nwuju | Task 4: forecast script, project report |
