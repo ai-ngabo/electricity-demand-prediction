@@ -1,5 +1,11 @@
 # Electricity Demand Prediction: A Time Series Pipeline
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Neon](https://img.shields.io/badge/Neon-00E599?style=for-the-badge&logo=postgresql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=for-the-badge&logo=jupyter&logoColor=white)
+
 This project predicts Spain's national electricity demand one hour ahead. It covers the whole chain: exploratory analysis and modelling in a notebook, the same data modelled in both PostgreSQL and MongoDB, a FastAPI service on top of both databases, and a script that pulls history from the API and produces a forecast.
 
 ## Problem and Dataset
